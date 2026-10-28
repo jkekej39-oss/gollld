@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>توقع اتجاه العملات الرقمية</title>
+<style>
+:root{--bg:#f3f5f7;--card:#fff;--text:#14202b;--mute:#66737f;--line:#dde3e8;--up:#0a8f5a;--down:#c93a3a;--flat:#7b8794;--accent:#1d5fd1}
+@media (prefers-color-scheme:dark){:root{--bg:#0e141a;--card:#162029;--text:#e6edf3;--mute:#8b9aa7;--line:#25323d;--up:#2ecc8f;--down:#ff6b6b;--flat:#8b9aa7;--accent:#6aa3ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,"Noto Naskh Arabic",Arial,sans-serif;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:20px 14px 40px}
+h1{font-size:1.4rem;margin:8px 0 4px}
+p.sub{margin:0 0 16px;color:var(--mute);font-size:.9rem}
+button{font:inherit;background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 18px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+button:focus-visible{outline:3px solid var(--text);outline-offset:2px}
+#status{margin:12px 0;color:var(--mute);font-size:.9rem;min-height:1.4em}
+.row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.row.strong.up{border-inline-start:5px solid var(--up)}
+.row.strong.down{border-inline-start:5px solid var(--down)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sym{font-weight:700;font-size:1.05rem}
+.price{color:var(--mute);direction:ltr;font-size:.9rem}
+.dir{font-weight:700;margin:6px 0}
+.up .dir{color:var(--up)}.down .dir{color:var(--down)}.flat .dir{color:var(--flat)}
+.bar{height:8px;border-radius:4px;background:var(--down);overflow:hidden;direction:ltr}
+.bar i{display:block;height:100%;background:var(--up)}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--mute);font-size:.82rem;margin-top:6px}
+.rel{margin-top:6px;font-size:.82rem;color:var(--mute)}
+.note{margin-top:20px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;color:var(--mute);font-size:.82rem}
+</style>
+</head>
+<body>
+<main>
+<h1>توقع اتجاه العملات الرقمية بعد ساعة</h1>
+<p class="sub">نموذج تعزيز تدرّجي (Gradient Boosting) يُدرَّب في متصفحك على نحو 10 أيام من شموع 5 دقائق، مع سياق BTC، ويُختبر بطريقة Walk-forward قبل أن تُعرض أي إشارة.</p>
+<button id="run">ابدأ التحليل</button>
+<div id="status" role="status"></div>
+<div id="out"></div>
+<div class="note">تُعرض الإشارة "موثوقة" فقط إذا أصابت في الاختبار على بيانات لم يرَها النموذج بنسبة 55% أو أكثر من 15 إشارة على الأقل. أما غير ذلك فتظهر كغير موثوقة. هذه أداة تعليمية وليست نصيحة مالية، والنجاح السابق لا يضمن المستقبل.</div>
+</main>
+<script>
+const SYMBOLS=["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT","ADAUSDT","DOGEUSDT","LINKUSDT"];
+const HORIZON=12,THRESH=0.0015,CONF=0.60,PAGES=3,ROUNDS=120,LR=0.1,BINS=16;
+const HOSTS=["https://data-api.binance.vision","https://api.binance.com"];
+const FEATS=["r1","r3","r12","r24","r48","eg1","eg2","rsi","macd","macdd","bb","atr","vol","cp","vr","b12","b48"];
+
+async function klines(sym){
+  let all=[],end=null;
+  for(let p=0;p<PAGES;p++){
+    let data,err;
+    for(const h of HOSTS){
+      try{
+        const r=await fetch(`${h}/api/v3/klines?symbol=${sym}&interval=5m&limit=1000${end?`&endTime=${end}`:""}`);
+        if(!r.ok)throw new Error(r.status);
+        data=await r.json();break;
+      }catch(e){err=e}
+    }
+    if(!data)throw err;
+    if(!data.length)break;
+    all=data.concat(all);end=data[0][0]-1;
+  }
+  all.pop();
+  return all.map(k=>({t:k[0],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));
+}
+
+const mean=x=>x.reduce((s,v)=>s+v,0)/x.length;
+const std=x=>{const m=mean(x);return Math.sqrt(x.reduce((s,v)=>s+(v-m)**2,0)/(x.length-1))};
+const roll=(a,n,f)=>a.map((_,i)=>i<n-1?NaN:f(a.slice(i-n+1,i+1)));
+const ema=(a,s)=>{const k=2/(s+1),o=[a[0]];for(let i=1;i<a.length;i++)o.push(k*a[i]+(1-k)*o[i-1]);return o};
+const wilder=a=>{const o=[a[0]];for(let i=1;i<a.length;i++)o.push(a[i]/14+(1-1/14)*o[i-1]);return o};
+const ret=(c,k)=>c.map((x,i)=>i<k?NaN:x/c[i-k]-1);
+const sig=z=>1/(1+Math.exp(-z));
+
+function btcContext(cs){
+  const c=cs.map(x=>x.c),a=ret(c,12),b=ret(c,48),m12=new Map(),m48=new Map();
+  cs.forEach((x,i)=>{m12.set(x.t,a[i]);m48.set(x.t,b[i])});
+  return{m12,m48};
+}
+
+function features(cs,btc){
+  const n=cs.length,c=cs.map(x=>x.c),h=cs.map(x=>x.h),l=cs.map(x=>x.l),v=cs.map(x=>x.v);
+  const r1=ret(c,1),r3=ret(c,3),r12=ret(c,12),r24=ret(c,24),r48=ret(c,48);
+  const e9=ema(c,9),e21=ema(c,21),e50=ema(c,50),e12=ema(c,12),e26=ema(c,26);
+  const gain=c.map((x,i)=>i?Math.max(x-c[i-1],0):0),loss=c.map((x,i)=>i?Math.max(c[i-1]-x,0):0);
+  const ag=wilder(gain),al=wilder(loss);
+  const m=e12.map((x,i)=>x-e26[i]),sg=ema(m,9);
+  const bm=roll(c,20,mean),bs=roll(c,20,std);
+  const tr=c.map((_,i)=>i?Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])):h[i]-l[i]);
+  const atr=wilder(tr),vm=roll(v,30,mean),sd12=roll(r1.map(x=>x||0),12,std),sd96=roll(r1.map(x=>x||0),96,std);
+  const rows=[];
+  for(let i=0;i<n;i++){
+    const w=4*bs[i],rg=h[i]-l[i];
+    const row={
+      r1:r1[i],r3:r3[i],r12:r12[i],r24:r24[i],r48:r48[i],
+      eg1:e9[i]/e21[i]-1,eg2:e21[i]/e50[i]-1,
+      rsi:i<14?NaN:(al[i]===0?(ag[i]>0?100:50):100-100/(1+ag[i]/al[i])),
+      macd:m[i]/c[i],macdd:(m[i]-sg[i])/c[i],
+      bb:w>0?(c[i]-(bm[i]-2*bs[i]))/w:NaN,
+      atr:i<14?NaN:atr[i]/c[i],vol:vm[i]>0?v[i]/vm[i]:NaN,
+      cp:rg>0?(c[i]-l[i])/rg:NaN,vr:sd96[i]>0?sd12[i]/sd96[i]:NaN,
+      b12:btc.m12.get(cs[i].t),b48:btc.m48.get(cs[i].t),target:null
+    };
+    if(i+HORIZON<n){const f=c[i+HORIZON]/c[i]-1;if(f>THRESH)row.target=1;else if(f<-THRESH)row.target=0}
+    rows.push(row);
+  }
+  return rows;
+}
+const ok=r=>FEATS.every(k=>Number.isFinite(r[k]));
+
+// تعزيز تدرّجي بجذوع قرار (stumps) مع أوزان لتوازن الفئتين
+function fitGB(X,y){
+  const n=X.length,d=X[0].length,pos=y.reduce((s,v)=>s+v,0);
+  const wp=n/(2*pos),wn=n/(2*(n-pos)),wt=y.map(t=>t?wp:wn);
+  const thr=[],bin=[];
+  for(let j=0;j<d;j++){
+    const s=X.map(r=>r[j]).sort((a,b)=>a-b),t=[];
+    for(let k=1;k<BINS;k++){const q=s[Math.floor(k*n/BINS)];if(!t.length||q>t[t.length-1])t.push(q)}
+    thr.push(t);
+    bin.push(Int16Array.from(X,r=>{let b=0;while(b<t.length&&r[j]>t[b])b++;return b}));
+  }
+  const F=new Float64Array(n),trees=[],lam=5;
+  for(let t=0;t<ROUNDS;t++){
+    const g=new Float64Array(n),hs=new Float64Array(n);
+    for(let i=0;i<n;i++){const p=sig(F[i]);g[i]=wt[i]*(y[i]-p);hs[i]=wt[i]*p*(1-p)+1e-9}
+    let best=null;
+    for(let j=0;j<d;j++){
+      const nb=thr[j].length+1,G=new Float64Array(nb),H=new Float64Array(nb);
+      for(let i=0;i<n;i++){G[bin[j][i]]+=g[i];H[bin[j][i]]+=hs[i]}
+      let GT=0,HT=0;for(let b=0;b<nb;b++){GT+=G[b];HT+=H[b]}
+      let gl=0,hl=0;
+      for(let b=0;b<nb-1;b++){
+        gl+=G[b];hl+=H[b];
+        const gain=gl*gl/(hl+lam)+(GT-gl)**2/(HT-hl+lam);
+        if(!best||gain>best.gain)best={gain,j,b,vl:gl/(hl+lam),vr:(GT-gl)/(HT-hl+lam)};
+      }
+    }
+    if(!best)break;
+    trees.push({j:best.j,t:thr[best.j][best.b],vl:best.vl,vr:best.vr});
+    for(let i=0;i<n;i++)F[i]+=LR*(bin[best.j][i]<=best.b?best.vl:best.vr);
+  }
+  return trees;
+}
+const predict=(trees,x)=>sig(trees.reduce((s,t)=>s+LR*(x[t.j]<=t.t?t.vl:t.vr),0));
+
+function walkForward(X,y){
+  const n=X.length,pr=[],yt=[];
+  const start=Math.floor(n*0.5),step=Math.floor(n*0.125);
+  for(let a=start;a<n;a+=step){
+    const b=Math.min(a+step,n);
+    if(b-a<30)continue;
+    const m=fitGB(X.slice(0,a-HORIZON),y.slice(0,a-HORIZON));
+    for(let i=a;i<b;i++){pr.push(predict(m,X[i]));yt.push(y[i])}
+  }
+  let tp=0,tn=0,P=0,N=0,hit=0,ns=0;
+  pr.forEach((p,i)=>{
+    if(yt[i]){P++;if(p>=0.5)tp++}else{N++;if(p<0.5)tn++}
+    if(p>=CONF||p<=1-CONF){ns++;if((p>=CONF)===!!yt[i])hit++}
+  });
+  return{bacc:P&&N?(tp/P+tn/N)/2:NaN,hit:ns?hit/ns:NaN,ns,total:pr.length};
+}
+
+async function analyze(sym,btcCtx){
+  const cs=await klines(sym);
+  if(cs.length<1000)throw new Error("بيانات غير كافية");
+  const rows=features(cs,btcCtx);
+  const lab=rows.filter(r=>r.target!==null&&ok(r));
+  if(lab.length<600)throw new Error("بيانات موسومة غير كافية");
+  const X=lab.map(r=>FEATS.map(k=>r[k])),y=lab.map(r=>r.target);
+  const ev=walkForward(X,y);
+  const model=fitGB(X,y);
+  const last=rows[rows.length-1];
+  if(!ok(last))throw new Error("مؤشرات ناقصة");
+  const pUp=predict(model,FEATS.map(k=>last[k]));
+  return{sym:sym.replace("USDT","/USDT"),price:cs[cs.length-1].c,pUp,ev,cs};
+}
+
+const fmt=p=>p>=100?p.toFixed(2):p>=1?p.toFixed(4):p.toFixed(6);
+
+function verdict(r){
+  const conf=Math.max(r.pUp,1-r.pUp),dirUp=r.pUp>=0.5;
+  const reliable=r.ev.ns>=15&&r.ev.hit>=0.55;
+  if(conf<CONF)return{cls:"flat",txt:"⚪ حيادي / غير واضح",strong:false,score:0};
+  if(!reliable)return{cls:"flat",txt:(dirUp?"↗":"↘")+" ميل "+(dirUp?"صاعد":"هابط")+" لكنه غير موثوق",strong:false,score:conf*0.5};
+  return{cls:dirUp?"up":"down",txt:dirUp?"🟢 صاعد بعد ساعة":"🔴 هابط بعد ساعة",strong:true,score:1+conf};
+}
+
+function render(r){
+  const v=verdict(r),pu=r.pUp*100,e=r.ev;
+  const el=document.createElement("div");
+  el.className=`row ${v.cls}${v.strong?" strong":""}`;
+  const rel=e.ns?`في الاختبار: ${(e.hit*100).toFixed(0)}% من ${e.ns} إشارة كانت صحيحة`:"لم تظهر إشارات كافية في الاختبار";
+  el.innerHTML=`<div class="top"><span class="sym">${r.sym}</span><span class="price">${fmt(r.price)}</span></div>
+  <div class="dir">${v.txt}</div>
+  <div class="bar" title="احتمال الصعود"><i style="width:${pu}%"></i></div>
+  <div class="meta"><span>صعود ${pu.toFixed(1)}%</span><span>هبوط ${(100-pu).toFixed(1)}%</span><span>دقة متوازنة ${(e.bacc*100).toFixed(1)}%</span></div>
+  <div class="rel">${rel}</div>`;
+  el._score=v.score;
+  return el;
+}
+
+document.getElementById("run").onclick=async ev=>{
+  const btn=ev.target,out=document.getElementById("out"),st=document.getElementById("status");
+  btn.disabled=true;out.innerHTML="";
+  const els=[];let i=0;
+  try{
+    st.textContent="جاري جلب بيانات BTC...";
+    const btcCtx=btcContext(await klines("BTCUSDT"));
+    for(const s of SYMBOLS){
+      st.textContent=`جاري تحليل ${s.replace("USDT","/USDT")} (${++i}/${SYMBOLS.length})...`;
+      await new Promise(r=>setTimeout(r,20));
+      try{els.push(render(await analyze(s,btcCtx)))}
+      catch(err){
+        const d=document.createElement("div");d.className="row flat";d._score=-1;
+        d.textContent=`تعذر تحليل ${s}: ${err.message}`;els.push(d);
+      }
+    }
+    els.sort((a,b)=>b._score-a._score).forEach(e=>out.appendChild(e));
+    st.textContent="اكتمل التحليل. الإشارات الموثوقة تظهر أولاً.";
+  }catch(err){
+    st.textContent="تعذر الاتصال ببيانات Binance. قد تكون محجوبة في منطقتك.";
+  }
+  btn.disabled=false;
+};
+</script>
+</body>
+</html>
