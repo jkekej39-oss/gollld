@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>متابع العملات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f4;--card:#fff;--ink:#14201b;--mut:#66746d;--line:#dde3e0;--up:#0a8f55;--dn:#d23a3a;--warn:#b7791f;--acc:#0f4c3a}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1512;--card:#16201b;--ink:#e8f0ec;--mut:#8a9a92;--line:#25332c;--up:#34d089;--dn:#ff6b6b;--warn:#f0b44c;--acc:#34d089}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,sans-serif;padding:16px;max-width:760px;margin-inline:auto}
+h1{font-size:24px;margin:8px 0 2px;font-weight:800}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.top{background:var(--card);border:1px solid var(--line);border-inline-start:5px solid var(--dn);padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:15px}
+.coin{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sym{font-size:20px;font-weight:800}
+.name{color:var(--mut);font-size:12px}
+.price{font-size:20px;font-weight:700;direction:ltr}
+.chg{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.chg span{flex:1;min-width:70px;text-align:center;padding:6px 4px;border-radius:4px;background:var(--bg);font-size:13px;direction:ltr}
+.chg small{display:block;color:var(--mut);font-size:11px;direction:rtl}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.sig{padding:8px 10px;border-radius:4px;font-weight:700;font-size:14px;margin-bottom:10px}
+.s-buy{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
+.s-wait{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.s-no{background:color-mix(in srgb,var(--dn) 15%,transparent);color:var(--dn)}
+.why{font-weight:400;font-size:12px;display:block;color:var(--mut);margin-top:2px}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+label{color:var(--mut);display:block;margin-bottom:3px}
+input{width:100%;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);font:inherit;direction:ltr}
+.res{margin-top:8px;font-size:14px}
+button{background:var(--acc);color:var(--bg);border:0;padding:8px 14px;border-radius:4px;font:inherit;font-weight:700;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.cap{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.cap label{margin:0;font-weight:700;color:var(--ink);white-space:nowrap}
+.cap input{font-size:18px;font-weight:700}
+.calc{margin-top:8px;padding:10px;border-radius:4px;background:var(--bg);display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.calc b{display:block;font-size:16px;direction:ltr;text-align:right}
+.note{color:var(--mut);font-size:12px;margin-top:14px;line-height:1.7}
+</style>
+</head>
+<body>
+<h1>متابع العملات</h1>
+<div class="sub"><span id="upd">جارٍ التحميل…</span> <button id="rf" style="margin-inline-start:8px;padding:4px 10px;font-size:12px">تحديث</button></div>
+<div class="cap"><label for="cap">رأس المال ($)</label><input id="cap" type="number" min="0" step="any" inputmode="decimal" value="100"></div>
+<div id="top"></div>
+<div id="list"></div>
+<div class="note">الإشارات مبنية على نسبة الهبوط فقط، وهي ليست نصيحة مالية. العملات الرقمية شديدة التذبذب، فلا تستثمر إلا ما تتحمل خسارته. الأسعار من CoinGecko وتتحدث كل دقيقة.</div>
+
+<script>
+const COINS=[["near","NEAR"],["worldcoin-wld","WLD"],["ethena","ENA"],["ondo-finance","ONDO"],["hyperliquid","HYPE"],["chainlink","LINK"],["sui","SUI"],["avalanche-2","AVAX"],["cardano","ADA"],["polkadot","DOT"]];
+const $=id=>document.getElementById(id);
+let data=[];
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+const cfg=()=>store("cfg")||{};
+const fmt=p=>p>=1?p.toFixed(3):p.toFixed(5);
+const pc=v=>v==null?"—":(v>0?"+":"")+v.toFixed(1)+"%";
+const cl=v=>v>=0?"up":"dn";
+
+function signal(c){
+  const d=c.d24,w=c.d7,m=c.d30;
+  if(d<=-8) return ["s-no","هبوط حاد — انتظر","ما زال يسقط بسرعة، انتظر حتى يستقر السعر"];
+  if(w>=15) return ["s-no","مرتفعة — لا تشتري الآن","ارتفعت كثيراً هذا الأسبوع"];
+  if(w<=-10&&d>-4) return ["s-buy","فرصة تجميع محتملة","نزلت "+Math.abs(w).toFixed(1)+"% هذا الأسبوع وبدأ الهبوط يهدأ"];
+  if(m<=-25) return ["s-wait","رخيصة لكن الاتجاه سلبي","اشترِ على دفعات صغيرة فقط"];
+  if(w<=-5) return ["s-wait","هبوط خفيف — راقب","لم تصل لمنطقة شراء واضحة"];
+  return ["s-wait","محايدة","لا توجد إشارة واضحة"];
+}
+
+function render(){
+  const cf=cfg();
+  const capital=Math.max(parseFloat($("cap").value)||0,0);
+  const sorted=[...data].sort((a,b)=>a.d24-b.d24);
+  const w=sorted[0];
+  $("top").innerHTML=w?`<div class="top">أكبر هبوط خلال 24 ساعة: <b>${w.sym}</b> <span class="dn" style="direction:ltr;display:inline-block">${pc(w.d24)}</span></div>`:"";
+  $("list").innerHTML=sorted.map(c=>{
+    const [cls,t,why]=signal(c);
+    const k=cf[c.sym]||{};
+    const tgt=k.tgt??15;
+    const tp=c.price*(1+tgt/100);
+    return `<div class="coin">
+<div class="row"><div><div class="sym">${c.sym}</div><div class="name">${c.name}</div></div><div class="price">$${fmt(c.price)}</div></div>
+<div class="chg">
+<span class="${cl(c.d24)}"><small>24 ساعة</small>${pc(c.d24)}</span>
+<span class="${cl(c.d7)}"><small>7 أيام</small>${pc(c.d7)}</span>
+<span class="${cl(c.d30)}"><small>30 يوم</small>${pc(c.d30)}</span>
+<span class="${cl(c.ath)}"><small>من القمة</small>${pc(c.ath)}</span></div>
+<div class="sig ${cls}">${t}<span class="why">${why}</span></div>
+<div class="tg">
+<div><label>سعر شرائي ($)</label><input type="number" step="any" data-s="${c.sym}" data-f="buy" value="${k.buy??""}" placeholder="اختياري"></div>
+<div><label>هدف الربح (%)</label><input type="number" step="any" data-s="${c.sym}" data-f="tgt" value="${tgt}"></div></div>
+<div class="res">سعر البيع المستهدف: <b dir="ltr">$${fmt(k.buy?k.buy*(1+tgt/100):tp)}</b>${k.buy?`<br>ربحك/خسارتك الآن: <b class="${cl(c.price-k.buy)}" dir="ltr" style="display:inline-block">${pc((c.price/k.buy-1)*100)}</b>`:`<span class="name"> (محسوب من السعر الحالي)</span>`}</div>
+${(()=>{const e=k.buy||c.price,u=capital/e,tg=e*(1+tgt/100),pr=u*(tg-e),now=u*(c.price-e);
+return `<div class="calc"><div>عدد العملات<b>${u.toLocaleString("en",{maximumFractionDigits:4})} ${c.sym}</b></div>
+<div>صافي الربح عند الهدف<b class="up">+$${pr.toFixed(2)}</b></div>
+<div>قيمة المبلغ عند الهدف<b>$${(capital+pr).toFixed(2)}</b></div>
+<div>الربح/الخسارة الآن<b class="${cl(now)}">${now>=0?"+":"-"}$${Math.abs(now).toFixed(2)}</b></div></div>`})()}
+</div>`}).join("");
+  document.querySelectorAll("input[data-s]").forEach(i=>i.onchange=()=>{
+    const c=cfg(),s=i.dataset.s;c[s]=c[s]||{};
+    c[s][i.dataset.f]=i.value===""?undefined:parseFloat(i.value);
+    store("cfg",c);render();
+  });
+}
+
+async function load(){
+  $("upd").textContent="جارٍ التحديث…";
+  try{
+    const ids=COINS.map(c=>c[0]).join(",");
+    const r=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h,7d,30d`);
+    if(!r.ok)throw new Error(r.status);
+    const j=await r.json();
+    data=j.map(x=>({sym:x.symbol.toUpperCase(),name:x.name,price:x.current_price,
+      d24:x.price_change_percentage_24h_in_currency??x.price_change_percentage_24h??0,
+      d7:x.price_change_percentage_7d_in_currency??0,
+      d30:x.price_change_percentage_30d_in_currency??0,
+      ath:x.ath_change_percentage??0}));
+    $("upd").textContent="آخر تحديث: "+new Date().toLocaleTimeString("ar");
+    render();
+  }catch(e){
+    $("upd").textContent="تعذر جلب الأسعار، جرّب التحديث بعد دقيقة (الحد المجاني للمصدر).";
+  }
+}
+$("cap").value=store("cap")??100;
+$("cap").oninput=()=>{store("cap",$("cap").value===""?100:parseFloat($("cap").value));if(data.length)render()};
+$("rf").onclick=load;
+load();setInterval(load,60000);
+</script>
+</body>
+</html>
