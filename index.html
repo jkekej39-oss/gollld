@@ -2,181 +2,366 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>متابع العملات</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>متابع العملات – مضاربة اليوم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f5f4;--card:#fff;--ink:#14201b;--mut:#66746d;--line:#dde3e0;--up:#0a8f55;--dn:#d23a3a;--warn:#b7791f;--acc:#0f4c3a}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1512;--card:#16201b;--ink:#e8f0ec;--mut:#8a9a92;--line:#25332c;--up:#34d089;--dn:#ff6b6b;--warn:#f0b44c;--acc:#34d089}}
+:root{
+  --bg:#f5f3ee; --panel:#ffffff; --ink:#1d1b16; --mute:#6f6a5d; --line:#e4dfd2;
+  --gold:#a87a12; --gold-soft:#f3e6c0; --down:#c8432f; --up:#1d8a5b; --up-soft:#d9f0e5; --down-soft:#f8dfd9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14130f; --panel:#1e1c16; --ink:#f1ede2; --mute:#9d9684; --line:#34312a;
+    --gold:#e0b44a; --gold-soft:#3a3016; --down:#ec6a56; --up:#4fc38d; --up-soft:#173628; --down-soft:#3d1f19;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14130f; --panel:#1e1c16; --ink:#f1ede2; --mute:#9d9684; --line:#34312a;
+  --gold:#e0b44a; --gold-soft:#3a3016; --down:#ec6a56; --up:#4fc38d; --up-soft:#173628; --down-soft:#3d1f19;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,sans-serif;padding:16px;max-width:760px;margin-inline:auto}
-h1{font-size:24px;margin:8px 0 2px;font-weight:800}
-.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
-.top{background:var(--card);border:1px solid var(--line);border-inline-start:5px solid var(--dn);padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:15px}
-.coin{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:10px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sym{font-size:20px;font-weight:800}
-.name{color:var(--mut);font-size:12px}
-.price{font-size:20px;font-weight:700;direction:ltr}
-.chg{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
-.chg span{flex:1;min-width:70px;text-align:center;padding:6px 4px;border-radius:4px;background:var(--bg);font-size:13px;direction:ltr}
-.chg small{display:block;color:var(--mut);font-size:11px;direction:rtl}
-.up{color:var(--up)}.dn{color:var(--dn)}
-.sig{padding:8px 10px;border-radius:4px;font-weight:700;font-size:14px;margin-bottom:10px}
-.s-buy{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
-.s-wait{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
-.s-no{background:color-mix(in srgb,var(--dn) 15%,transparent);color:var(--dn)}
-.why{font-weight:400;font-size:12px;display:block;color:var(--mut);margin-top:2px}
-.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
-label{color:var(--mut);display:block;margin-bottom:3px}
-input{width:100%;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);font:inherit;direction:ltr}
-.res{margin-top:8px;font-size:14px}
-button{background:var(--acc);color:var(--bg);border:0;padding:8px 14px;border-radius:4px;font:inherit;font-weight:700;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.cap{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.cap label{margin:0;font-weight:700;color:var(--ink);white-space:nowrap}
-.cap input{font-size:18px;font-weight:700}
-.calc{margin-top:8px;padding:10px;border-radius:4px;background:var(--bg);display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
-.calc b{display:block;font-size:16px;direction:ltr;text-align:right}
-.buy{margin-bottom:10px;font-size:13px}
-.units{font-size:13px;color:var(--mut);margin-bottom:8px}.units b{color:var(--ink)}
-.tgs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tc{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px;text-align:center}
-.tn{font-size:12px;font-weight:700;margin-bottom:6px}
-.tc input{text-align:center;padding:5px;font-size:13px}
-.tp{font-size:14px;font-weight:700;margin-top:6px}
-.cp{margin:6px 0;padding:3px 12px;font-size:12px;width:100%}
-.cp.ok{background:var(--up)}
-.tpr{font-size:13px;font-weight:700}
-.nowl{margin-top:10px;font-size:13px;color:var(--mut)}
-#bell{position:relative;background:var(--card);color:var(--ink);border:1px solid var(--line);font-size:18px;padding:4px 10px;margin-inline-start:8px}
-#bc{position:absolute;top:-7px;inset-inline-end:-7px;background:var(--dn);color:#fff;font-size:11px;min-width:18px;height:18px;border-radius:9px;line-height:18px;text-align:center}
-#bell.on{animation:rg 1.6s ease-in-out infinite;transform-origin:50% 0}
-@keyframes rg{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(14deg)}20%{transform:rotate(-12deg)}30%{transform:rotate(8deg)}40%{transform:rotate(-6deg)}}
-@media (prefers-reduced-motion:reduce){#bell.on{animation:none}}
-.bp{background:var(--card);border:1px solid var(--up);border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:14px}
-.bp .it{padding:8px 0;border-bottom:1px solid var(--line)}.bp .it:last-of-type{border:0}
-.bp .en{margin-top:8px;padding:5px 12px;font-size:12px}
-.note{color:var(--mut);font-size:12px;margin-top:14px;line-height:1.7}
+html{height:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;line-height:1.6;min-height:100%}
+.wrap{max-width:720px;margin:0 auto;padding:16px 14px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+h1{font-size:26px;font-weight:800;margin:0}
+.sub{color:var(--mute);font-size:14px;margin:0 0 14px}
+button{font-family:inherit;cursor:pointer}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.settings{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.settings label{font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:4px}
+input{font-family:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.status{font-size:13px;color:var(--mute);margin:8px 2px 14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font-weight:700;font-size:15px}
+.tab[aria-selected="true"]{background:var(--gold-soft);color:var(--ink);border-color:var(--gold)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.card.top{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sym{font-size:22px;font-weight:800}
+.sym small{font-size:13px;color:var(--mute);font-weight:500;margin-inline-start:4px}
+.drop{background:var(--down-soft);color:var(--down);font-weight:800;border-radius:999px;padding:3px 10px;font-size:15px;direction:ltr}
+.verdict{margin:10px 0;padding:8px 10px;border-radius:10px;font-weight:800;font-size:15px}
+.v-great{background:var(--up-soft);color:var(--up)}
+.v-good{background:var(--gold-soft);color:var(--gold)}
+.v-wait{background:var(--down-soft);color:var(--down)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.cell{background:var(--bg);border-radius:10px;padding:8px;text-align:center}
+.cell span{display:block;font-size:12px;color:var(--mute)}
+.cell b{font-size:16px;direction:ltr;display:inline-block}
+.cell.t b{color:var(--up)}
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:14px;margin:8px 0;padding:10px;border:1px dashed var(--line);border-radius:10px}
+.levels div{display:flex;justify-content:space-between;gap:6px}
+.levels b{direction:ltr}
+.lv-s b{color:var(--up)} .lv-r b{color:var(--down)}
+ul.why{margin:8px 0 12px;padding:0;list-style:none;font-size:14px}
+ul.why li{padding:3px 0 3px 0}
+ul.why li::before{content:"✓ ";color:var(--up);font-weight:800}
+ul.why li.neg::before{content:"! ";color:var(--down)}
+.empty{text-align:center;color:var(--mute);padding:30px 10px;border:1px dashed var(--line);border-radius:14px}
+.pos-meta{font-size:13px;color:var(--mute)}
+.pl{font-weight:800;direction:ltr;display:inline-block}
+.pl.up{color:var(--up)} .pl.down{color:var(--down)}
+.addpos{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end}
+.addpos label{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:3px}
+.note{font-size:12.5px;color:var(--mute);margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:420px){.addpos{grid-template-columns:1fr 1fr}.addpos .btn{grid-column:1/-1}}
 </style>
 </head>
 <body>
-<h1>متابع العملات</h1>
-<div class="sub"><span id="upd">جارٍ التحميل…</span> <button id="bell" aria-label="التنبيهات">🔔<span id="bc" hidden></span></button><button id="rf" style="margin-inline-start:8px;padding:4px 10px;font-size:12px">تحديث</button></div>
-<div class="cap"><label for="cap">رأس المال ($)</label><input id="cap" type="number" min="0" step="any" inputmode="decimal" value="100"></div>
-<div id="bp" class="bp" hidden></div>
-<div id="top"></div>
-<div id="list"></div>
-<div class="note">الإشارات مبنية على نسبة الهبوط فقط، وهي ليست نصيحة مالية. العملات الرقمية شديدة التذبذب، فلا تستثمر إلا ما تتحمل خسارته. الأسعار من CoinGecko وتتحدث كل دقيقة.</div>
+<div class="wrap">
+  <header>
+    <h1>متابع العملات</h1>
+    <button class="btn" id="refresh" type="button">🔔 تحديث</button>
+  </header>
+  <p class="sub">يبحث عن عملات هابطة 3–5% منذ بداية اليوم، ويحدد سعر البيع لربح 3%.</p>
+
+  <section class="settings" aria-label="الإعدادات">
+    <label>المبلغ لكل عملة ($)<input id="cap" type="number" inputmode="decimal" value="20" min="1"></label>
+    <label>هدف الربح (%)<input id="profit" type="number" inputmode="decimal" value="3" step="0.1" min="0.1"></label>
+    <label>أقل هبوط اليوم (%)<input id="minDrop" type="number" inputmode="decimal" value="3" step="0.1" min="0"></label>
+    <label>أكثر هبوط اليوم (%)<input id="maxDrop" type="number" inputmode="decimal" value="5" step="0.1" min="0"></label>
+  </section>
+
+  <div class="status"><span id="statusTxt">جارٍ التحميل…</span><span id="dayTxt"></span></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tabScan" aria-selected="true" type="button">فرص اليوم</button>
+    <button class="tab" role="tab" id="tabPos" aria-selected="false" type="button">صفقاتي</button>
+  </div>
+
+  <main id="scanView"></main>
+  <main id="posView" hidden></main>
+
+  <p class="note">الإشارات مبنية على الهبوط منذ افتتاح اليوم والدعم والمقاومة وRSI، وهي ليست نصيحة مالية. العملة الهابطة قد تواصل الهبوط، ومعظم الربح الصافي يقل قليلاً بسبب عمولة الشراء والبيع (حوالي 0.2%). لا تضع إلا ما تتحمل خسارته. الأسعار من Binance وتتحدث كل دقيقة.</p>
+</div>
 
 <script>
-const COINS=[["near","NEAR"],["worldcoin-wld","WLD"],["ethena","ENA"],["ondo-finance","ONDO"],["hyperliquid","HYPE"],["chainlink","LINK"],["sui","SUI"],["avalanche-2","AVAX"],["cardano","ADA"],["polkadot","DOT"],["grass","GRASS"],["injective-protocol","INJ"],["hedera-hashgraph","HBAR"],["mantle","MNT"]];
-const $=id=>document.getElementById(id);
-let data=[];
-function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
-const cfg=()=>store("cfg")||{};
-const fmt=p=>p>=1?p.toFixed(3):p.toFixed(5);
-const pc=v=>v==null?"—":(v>0?"+":"")+v.toFixed(1)+"%";
-const cl=v=>v>=0?"up":"dn";
+(function(){
+  var BASES = ['https://data-api.binance.vision','https://api.binance.com'];
+  var WATCH = ['ENA','NEAR','ONDO','AAVE','INJ'];
+  var STABLE = /^(USDC|FDUSD|TUSD|DAI|USDP|USDE|EUR|EURI|AEUR|GBP|TRY|BRL|ARS|UST|BFUSD|XUSD|USD1|PAXG)$/;
+  var tickers = {};
+  var timer = null, busy = false;
+  var $ = function(id){ return document.getElementById(id); };
 
-function excellent(c){return c.d7<=-12&&c.d24>-3&&(c.d30<=-20||c.ath<=-50)}
-function signal(c){
-  const d=c.d24,w=c.d7,m=c.d30;
-  if(excellent(c)) return ["s-buy","🔔 توقيت ممتاز للشراء","نزلت "+Math.abs(w).toFixed(1)+"% في أسبوع، وهدأ الهبوط، وسعرها بعيد عن قمتها ("+pc(c.ath)+")"];
-  if(d<=-8) return ["s-no","هبوط حاد — انتظر","ما زال يسقط بسرعة، انتظر حتى يستقر السعر"];
-  if(w>=15) return ["s-no","مرتفعة — لا تشتري الآن","ارتفعت كثيراً هذا الأسبوع"];
-  if(w<=-10&&d>-4) return ["s-buy","فرصة تجميع محتملة","نزلت "+Math.abs(w).toFixed(1)+"% هذا الأسبوع وبدأ الهبوط يهدأ"];
-  if(m<=-25) return ["s-wait","رخيصة لكن الاتجاه سلبي","اشترِ على دفعات صغيرة فقط"];
-  if(w<=-5) return ["s-wait","هبوط خفيف — راقب","لم تصل لمنطقة شراء واضحة"];
-  return ["s-wait","محايدة","لا توجد إشارة واضحة"];
-}
+  /* ---------- التخزين (آمن) ---------- */
+  function load(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+  function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 
-function render(){
-  const cf=cfg();
-  const capital=Math.max(parseFloat($("cap").value)||0,0);
-  const sorted=[...data].sort((a,b)=>a.d24-b.d24);
-  const w=sorted[0];
-  $("top").innerHTML=w?`<div class="top">أكبر هبوط خلال 24 ساعة: <b>${w.sym}</b> <span class="dn" style="direction:ltr;display:inline-block">${pc(w.d24)}</span></div>`:"";
-  const ex=data.filter(excellent);
-  $("bc").hidden=!ex.length;$("bc").textContent=ex.length;$("bell").classList.toggle("on",ex.length>0);
-  const canN="Notification" in window&&Notification.permission==="default";
-  $("bp").innerHTML=ex.length?ex.map(c=>`<div class="it">🔔 <b>${c.sym}</b> — توقيت ممتاز للشراء<br><span class="name">السعر $${fmt(c.price)} · أسبوع ${pc(c.d7)} · اليوم ${pc(c.d24)} · من القمة ${pc(c.ath)}</span></div>`).join("")+(canN?'<button class="en" id="en">تفعيل إشعارات المتصفح</button>':""):'لا توجد عملة بتوقيت ممتاز الآن. سننبهك هنا عند ظهور واحدة.'+(canN?'<br><button class="en" id="en">تفعيل إشعارات المتصفح</button>':"");
-  const en=$("en");if(en)en.onclick=()=>Notification.requestPermission().then(render);
-  $("list").innerHTML=sorted.map(c=>{
-    const [cls,t,why]=signal(c);
-    const k=cf[c.sym]||{};
-    const tgt=k.tgt??15;
-    const tp=c.price*(1+tgt/100);
-    return `<div class="coin">
-<div class="row"><div><div class="sym">${c.sym}</div><div class="name">${c.name}</div></div><div class="price">$${fmt(c.price)}</div></div>
-<div class="chg">
-<span class="${cl(c.d24)}"><small>24 ساعة</small>${pc(c.d24)}</span>
-<span class="${cl(c.d7)}"><small>7 أيام</small>${pc(c.d7)}</span>
-<span class="${cl(c.d30)}"><small>30 يوم</small>${pc(c.d30)}</span>
-<span class="${cl(c.ath)}"><small>من القمة</small>${pc(c.ath)}</span></div>
-<div class="sig ${cls}">${t}<span class="why">${why}</span></div>
-<div class="buy"><label>سعر الشراء ($) — اتركه فارغاً لاستخدام السعر الحالي</label><input type="number" step="any" data-s="${c.sym}" data-f="buy" value="${k.buy??""}" placeholder="${fmt(c.price)}"></div>
-${(()=>{const e=k.buy||c.price,u=capital/e,now=u*(c.price-e);
-const T=[["هدف يومي","t1",k.t1??3],["هدف أسبوعي","t2",k.t2??10],["هدف شهري","t3",k.t3??25]];
-return `<div class="units">تشتري <b dir="ltr">${u.toLocaleString("en",{maximumFractionDigits:4})} ${c.sym}</b> بـ $${capital.toFixed(2)}</div>
-<div class="tgs">${T.map(([n,f,t])=>{const tp=e*(1+t/100),pr=u*(tp-e);
-return `<div class="tc"><div class="tn">${n}</div>
-<input type="number" step="any" data-s="${c.sym}" data-f="${f}" value="${t}" aria-label="${n} %">
-<div class="tp" dir="ltr">$${fmt(tp)}</div>
-<button class="cp" data-v="${fmt(tp)}" aria-label="نسخ سعر ${n}">نسخ</button>
-<div class="tpr up" dir="ltr">+$${pr.toFixed(2)}</div></div>`}).join("")}</div>
-<div class="nowl">الربح/الخسارة الآن: <b class="${cl(now)}" dir="ltr" style="display:inline-block">${now>=0?"+":"-"}$${Math.abs(now).toFixed(2)} (${pc((c.price/e-1)*100)})</b></div>`})()}
-</div>`}).join("");
-  document.querySelectorAll("input[data-s]").forEach(i=>i.onchange=()=>{
-    const c=cfg(),s=i.dataset.s;c[s]=c[s]||{};
-    c[s][i.dataset.f]=i.value===""?undefined:parseFloat(i.value);
-    store("cfg",c);render();
+  var settings = load('scan_settings', {cap:20, profit:3, minDrop:3, maxDrop:5});
+  ['cap','profit','minDrop','maxDrop'].forEach(function(k){
+    var el = $(k); el.value = settings[k];
+    el.addEventListener('change', function(){ settings[k] = parseFloat(el.value) || settings[k]; save('scan_settings', settings); run(); });
   });
-}
 
-async function load(){
-  $("upd").textContent="جارٍ التحديث…";
-  try{
-    const ids=COINS.map(c=>c[0]).join(",");
-    const r=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h,7d,30d`);
-    if(!r.ok)throw new Error(r.status);
-    const j=await r.json();
-    data=j.map(x=>({sym:x.symbol.toUpperCase(),name:x.name,price:x.current_price,
-      d24:x.price_change_percentage_24h_in_currency??x.price_change_percentage_24h??0,
-      d7:x.price_change_percentage_7d_in_currency??0,
-      d30:x.price_change_percentage_30d_in_currency??0,
-      ath:x.ath_change_percentage??0}));
-    $("upd").textContent="آخر تحديث: "+new Date().toLocaleTimeString("ar");
-    render();notify();
-  }catch(e){
-    $("upd").textContent="تعذر جلب الأسعار، جرّب التحديث بعد دقيقة (الحد المجاني للمصدر).";
+  /* ---------- أدوات ---------- */
+  function fmt(n){
+    if(n >= 100) return n.toFixed(2);
+    if(n >= 1) return n.toFixed(3);
+    if(n >= 0.1) return n.toFixed(4);
+    if(n >= 0.01) return n.toFixed(5);
+    return n.toFixed(7);
   }
-}
-$("cap").value=store("cap")??100;
-$("cap").oninput=()=>{store("cap",$("cap").value===""?100:parseFloat($("cap").value));if(data.length)render()};
-document.addEventListener("click",async e=>{
-  const b=e.target.closest(".cp");if(!b)return;
-  const v=b.dataset.v;
-  try{await navigator.clipboard.writeText(v)}catch(_){
-    const t=document.createElement("textarea");t.value=v;document.body.appendChild(t);t.select();
-    try{document.execCommand("copy")}catch(__){}t.remove();
+  function api(path){
+    var i = 0;
+    function next(){
+      if(i >= BASES.length) return Promise.reject(new Error('fail'));
+      var url = BASES[i++] + path;
+      return fetch(url).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).catch(next);
+    }
+    return next();
   }
-  b.textContent="تم ✓";b.classList.add("ok");
-  setTimeout(()=>{b.textContent="نسخ";b.classList.remove("ok")},1200);
-});
-$("bell").onclick=()=>{$("bp").hidden=!$("bp").hidden};
-function notify(){
-  if(!("Notification" in window)||Notification.permission!=="granted")return;
-  const seen=store("seen")||{},now=Date.now();
-  data.filter(excellent).forEach(c=>{
-    if(now-(seen[c.sym]||0)<6*3600e3)return;
-    seen[c.sym]=now;
-    try{new Notification("🔔 "+c.sym+" — توقيت ممتاز للشراء",{body:"السعر $"+fmt(c.price)+" · أسبوع "+pc(c.d7)})}catch(e){}
+  function pool(items, worker, size){
+    var out = new Array(items.length), idx = 0;
+    function lane(){
+      if(idx >= items.length) return Promise.resolve();
+      var my = idx++;
+      return worker(items[my]).then(function(r){ out[my] = r; }, function(){ out[my] = null; }).then(lane);
+    }
+    var lanes = []; for(var i=0;i<size;i++) lanes.push(lane());
+    return Promise.all(lanes).then(function(){ return out; });
+  }
+  function rsi(closes, n){
+    n = n || 14; if(closes.length < n+1) return null;
+    var g=0,l=0,i,d;
+    for(i=1;i<=n;i++){ d=closes[i]-closes[i-1]; if(d>=0) g+=d; else l-=d; }
+    g/=n; l/=n;
+    for(i=n+1;i<closes.length;i++){
+      d=closes[i]-closes[i-1];
+      g=(g*(n-1)+(d>0?d:0))/n; l=(l*(n-1)+(d<0?-d:0))/n;
+    }
+    return l===0 ? 100 : 100-100/(1+g/l);
+  }
+
+  /* ---------- الدعم والمقاومة من شموع الساعة ---------- */
+  function levels(h, price, dayOpen){
+    var lows = h.map(function(k){return +k[3];}), highs = h.map(function(k){return +k[2];});
+    var swingLows = [], swingHighs = [], i, j, isL, isH, w = 3;
+    for(i=w;i<h.length-w;i++){
+      isL = true; isH = true;
+      for(j=1;j<=w;j++){
+        if(lows[i] > lows[i-j] || lows[i] > lows[i+j]) isL = false;
+        if(highs[i] < highs[i-j] || highs[i] < highs[i+j]) isH = false;
+      }
+      if(isL) swingLows.push(lows[i]);
+      if(isH) swingHighs.push(highs[i]);
+    }
+    var low72 = Math.min.apply(null, lows);
+    var below = swingLows.filter(function(x){ return x < price*0.9995; }).sort(function(a,b){return b-a;});
+    var s1 = below.length ? below[0] : low72;
+    var s2 = low72 < s1*0.998 ? low72 : (below.length > 1 ? below[below.length-1] : low72);
+    var above = swingHighs.filter(function(x){ return x > price*1.002; }).sort(function(a,b){return a-b;});
+    var high24 = Math.max.apply(null, highs.slice(-24));
+    var r2 = above.length ? above[0] : high24;
+    return {s1:s1, s2:s2, r1:dayOpen, r2:Math.max(r2, price), low72:low72, high24:high24};
+  }
+
+  /* ---------- التحليل ---------- */
+  function analyze(c, h){
+    var s = settings, price = c.price;
+    var lv = levels(h, price, c.open);
+    var closes = h.map(function(k){return +k[4];});
+    var rs = rsi(closes, 14);
+    var target = price * (1 + s.profit/100);
+    var gain = s.cap * s.profit/100;
+    var distS1 = (price - lv.s1)/price*100;
+    var score = 0, why = [], neg = [];
+
+    why.push('هبط ' + Math.abs(c.drop).toFixed(2) + '% منذ افتتاح اليوم (' + fmt(c.open) + ')');
+    if(distS1 <= 1.5 && distS1 >= 0){ score++; why.push('السعر قريب من الدعم ' + fmt(lv.s1) + ' (يبعد ' + distS1.toFixed(2) + '%) وهذا يقلل مخاطرة الهبوط أكثر'); }
+    if(rs !== null){
+      if(rs < 35){ score++; why.push('RSI على الساعة ' + rs.toFixed(0) + ': تشبع بيع قوي والارتداد وارد'); }
+      else if(rs < 45){ score += 0.5; why.push('RSI على الساعة ' + rs.toFixed(0) + ': ضعيف وقريب من منطقة الارتداد'); }
+      else if(rs > 55){ neg.push('RSI ' + rs.toFixed(0) + ': الزخم ليس في أضعف حالاته بعد'); }
+    }
+    if(target <= c.open){ score++; why.push('هدفك ' + fmt(target) + ' أقل من افتتاح اليوم، يعني يكفي ارتداد جزئي'); }
+    else if(target <= lv.r2){ score += 0.5; why.push('الهدف يقع تحت مقاومة ' + fmt(lv.r2) + ' لكنه أعلى من افتتاح اليوم'); }
+    else neg.push('الهدف أعلى من أقرب مقاومة ' + fmt(lv.r2) + ' وقد يحتاج وقتاً');
+    var last = h[h.length-1], prev = h[h.length-2];
+    if(last && prev && +last[4] > +last[1] && +last[4] > +prev[4]){ score++; why.push('شمعة الساعة الحالية خضراء: بدأ ارتداد'); }
+    if(price <= lv.low72*1.003){ score -= 1; neg.push('السعر عند أدنى مستوى في 3 أيام ولا يوجد دعم تحته، ممكن يكمل نزول'); }
+
+    var verdict, cls;
+    if(score >= 3){ verdict = '✅ توقيت ممتاز للشراء'; cls = 'v-great'; }
+    else if(score >= 2){ verdict = '👍 توقيت جيد، ادخل بحذر'; cls = 'v-good'; }
+    else { verdict = '⏳ انتظر تأكيداً أكثر'; cls = 'v-wait'; }
+
+    return {sym:c.sym, price:price, open:c.open, drop:c.drop, target:target, gain:gain, lv:lv, rsi:rs, score:score, why:why, neg:neg, verdict:verdict, cls:cls};
+  }
+
+  /* ---------- الجلب ---------- */
+  function scan(){
+    return api('/api/v3/ticker/24hr').then(function(all){
+      tickers = {};
+      var list = [];
+      all.forEach(function(t){
+        if(!/USDT$/.test(t.symbol)) return;
+        var base = t.symbol.slice(0, -4);
+        if(STABLE.test(base) || /(UP|DOWN|BULL|BEAR)$/.test(base)) return;
+        var price = +t.lastPrice;
+        tickers[base] = price;
+        list.push({sym:base, price:price, vol:+t.quoteVolume, ch:+t.priceChangePercent});
+      });
+      list = list.filter(function(x){ return x.vol >= 15e6 && x.price > 0; })
+                 .sort(function(a,b){ return b.vol - a.vol; }).slice(0, 220);
+      var pre = list.filter(function(x){ return (x.ch <= -1.5 && x.ch >= -12) || WATCH.indexOf(x.sym) > -1; }).slice(0, 60);
+      return pool(pre, function(x){
+        return api('/api/v3/klines?symbol=' + x.sym + 'USDT&interval=1d&limit=2').then(function(k){
+          var today = k[k.length-1], open = +today[1];
+          return {sym:x.sym, price:x.price, open:open, drop:(x.price-open)/open*100};
+        });
+      }, 8).then(function(rows){
+        rows = rows.filter(Boolean);
+        var cands = rows.filter(function(r){ return r.drop <= -settings.minDrop && r.drop >= -settings.maxDrop; })
+                        .sort(function(a,b){ return a.drop - b.drop; }).slice(0, 14);
+        return pool(cands, function(c){
+          return api('/api/v3/klines?symbol=' + c.sym + 'USDT&interval=1h&limit=72').then(function(h){ return analyze(c, h); });
+        }, 6).then(function(res){
+          return {results: res.filter(Boolean).sort(function(a,b){ return b.score - a.score; }), checked: rows.length};
+        });
+      });
+    });
+  }
+
+  /* ---------- العرض ---------- */
+  function cardHTML(r, idx){
+    var lv = r.lv;
+    var why = r.why.map(function(t){ return '<li>' + t + '</li>'; }).join('') +
+              r.neg.map(function(t){ return '<li class="neg">' + t + '</li>'; }).join('');
+    return '<article class="card' + (idx === 0 && r.score >= 3 ? ' top' : '') + '">' +
+      '<div class="row"><div class="sym">' + r.sym + '<small>/USDT</small></div><span class="drop">-' + Math.abs(r.drop).toFixed(2) + '%</span></div>' +
+      '<div class="verdict ' + r.cls + '">' + r.verdict + '</div>' +
+      '<div class="grid3">' +
+        '<div class="cell"><span>اشترِ عند</span><b>' + fmt(r.price) + '</b></div>' +
+        '<div class="cell t"><span>بِع عند</span><b>' + fmt(r.target) + '</b></div>' +
+        '<div class="cell t"><span>الربح</span><b>+$' + r.gain.toFixed(2) + '</b></div>' +
+      '</div>' +
+      '<div class="levels">' +
+        '<div class="lv-s"><span>الدعم 1</span><b>' + fmt(lv.s1) + '</b></div>' +
+        '<div class="lv-r"><span>المقاومة 1</span><b>' + fmt(lv.r1) + '</b></div>' +
+        '<div class="lv-s"><span>الدعم 2</span><b>' + fmt(lv.s2) + '</b></div>' +
+        '<div class="lv-r"><span>المقاومة 2</span><b>' + fmt(lv.r2) + '</b></div>' +
+      '</div>' +
+      '<ul class="why">' + why + '</ul>' +
+      '<button class="btn" type="button" data-buy="' + r.sym + '" data-price="' + r.price + '">اشتريتها، أضفها لصفقاتي</button>' +
+    '</article>';
+  }
+
+  function renderScan(data){
+    var v = $('scanView');
+    if(!data.results.length){
+      v.innerHTML = '<div class="empty">لا توجد عملة هابطة بين ' + settings.minDrop + '% و ' + settings.maxDrop + '% منذ افتتاح اليوم الآن.<br>جرّب بعد قليل، الصفحة تحدّث نفسها كل دقيقة.</div>';
+      return;
+    }
+    v.innerHTML = data.results.map(cardHTML).join('');
+  }
+
+  /* ---------- صفقاتي ---------- */
+  function positions(){ return load('positions', []); }
+  function addPosition(sym, price, cap){
+    var p = positions();
+    var qty = cap / price;
+    p.push({id: Date.now(), sym: sym, buy: price, qty: qty, cap: cap, profit: settings.profit, time: Date.now()});
+    save('positions', p); renderPos();
+  }
+  function renderPos(){
+    var v = $('posView'), p = positions();
+    var form = '<div class="addpos">' +
+      '<label>العملة<input id="pSym" placeholder="مثال NEAR" autocapitalize="characters"></label>' +
+      '<label>سعر الشراء<input id="pBuy" type="number" inputmode="decimal" step="any"></label>' +
+      '<label>الكمية<input id="pQty" type="number" inputmode="decimal" step="any"></label>' +
+      '<button class="btn" id="pAdd" type="button">إضافة</button></div>';
+    var cards = p.length ? p.slice().reverse().map(function(x){
+      var cur = tickers[x.sym];
+      var target = x.buy * (1 + x.profit/100);
+      var info;
+      if(!cur){ info = '<span class="pos-meta">السعر غير متاح</span>'; }
+      else {
+        var pct = (cur - x.buy)/x.buy*100, usd = (cur - x.buy)*x.qty;
+        var cls = pct >= 0 ? 'up' : 'down';
+        var state = cur >= target ? '🎯 وصلت هدفك، بِع الآن' : (pct < 0 ? '⏳ احتفظ حتى ترجع للربح' : '📈 ربح بسيط، الهدف لم يتحقق بعد');
+        info = '<div class="row"><span class="pl ' + cls + '">' + (pct>=0?'+':'') + pct.toFixed(2) + '% ( ' + (usd>=0?'+':'-') + '$' + Math.abs(usd).toFixed(2) + ' )</span><span>' + fmt(cur) + '</span></div>' +
+               '<div class="verdict ' + (cur >= target ? 'v-great' : (pct<0 ? 'v-wait' : 'v-good')) + '">' + state + '</div>';
+      }
+      return '<article class="card"><div class="row"><div class="sym">' + x.sym + '<small>شراء ' + fmt(x.buy) + '</small></div>' +
+        '<button class="btn ghost" type="button" data-sold="' + x.id + '">تم البيع</button></div>' +
+        '<div class="pos-meta">الهدف ' + fmt(target) + ' • المبلغ $' + (x.buy*x.qty).toFixed(2) + '</div>' + info + '</article>';
+    }).join('') : '<div class="empty">لا توجد صفقات. اضغط «اشتريتها» تحت أي فرصة، أو أضف صفقة يدوياً من الأعلى.</div>';
+    v.innerHTML = form + cards;
+  }
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    if(b.dataset.buy){ addPosition(b.dataset.buy, parseFloat(b.dataset.price), settings.cap); b.textContent = 'تمت الإضافة ✓'; b.disabled = true; }
+    else if(b.dataset.sold){ save('positions', positions().filter(function(x){ return String(x.id) !== b.dataset.sold; })); renderPos(); }
+    else if(b.id === 'pAdd'){
+      var s = ($('pSym').value || '').trim().toUpperCase().replace(/USDT$/,''), bp = parseFloat($('pBuy').value), q = parseFloat($('pQty').value);
+      if(!s || !(bp > 0) || !(q > 0)) return;
+      var p = positions(); p.push({id: Date.now(), sym: s, buy: bp, qty: q, cap: bp*q, profit: settings.profit, time: Date.now()});
+      save('positions', p); renderPos();
+    }
   });
-  store("seen",seen);
-}
-$("rf").onclick=load;
-load();setInterval(load,60000);
+
+  function tab(which){
+    var scanOn = which === 'scan';
+    $('scanView').hidden = !scanOn; $('posView').hidden = scanOn;
+    $('tabScan').setAttribute('aria-selected', scanOn); $('tabPos').setAttribute('aria-selected', !scanOn);
+    if(!scanOn) renderPos();
+  }
+  $('tabScan').onclick = function(){ tab('scan'); };
+  $('tabPos').onclick = function(){ tab('pos'); };
+  $('refresh').onclick = function(){ run(); };
+
+  function dayInfo(){
+    var n = new Date(), start = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()));
+    var t = start.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+    $('dayTxt').textContent = 'بداية اليوم: ' + t;
+  }
+
+  function run(){
+    if(busy) return; busy = true;
+    $('statusTxt').textContent = 'جارٍ الفحص…';
+    scan().then(function(d){
+      renderScan(d);
+      $('statusTxt').textContent = 'فُحصت ' + d.checked + ' عملة • آخر تحديث ' + new Date().toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+      if(!$('posView').hidden) renderPos();
+    }).catch(function(){
+      $('scanView').innerHTML = '<div class="empty">تعذر الاتصال بمصدر الأسعار. تأكد من الإنترنت أو جرّب VPN إن كان Binance محجوباً، ثم اضغط تحديث.</div>';
+      $('statusTxt').textContent = 'فشل التحديث';
+    }).then(function(){ busy = false; });
+  }
+
+  dayInfo();
+  run();
+  timer = setInterval(run, 60000);
+})();
 </script>
 </body>
 </html>
